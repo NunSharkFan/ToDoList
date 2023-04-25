@@ -1,11 +1,10 @@
 import flet as ft
 
-appName = "Deff Not Nun Shark"
-class Task(ft.UserControl):
+class task(ft.UserControl):
     def __init__(self, input_text, remove_task):
         super().__init__()
-        self.input = input_text
         self.remove_task = remove_task
+        self.input = input_text
 
     def build(self):
         self.task_cb = ft.Checkbox(label=self.input,
@@ -16,7 +15,16 @@ class Task(ft.UserControl):
         self.edit_task = ft.IconButton(icon=ft.icons.CREATE_OUTLINED,
                               on_click=self.edit_clicked)
         self.del_task = ft.IconButton(icon=ft.icons.DELETE_OUTLINE,
-                              on_click=self.remove_clicked)
+                              on_click=self.confirm_remove)
+        self.del_confirm = ft.Row(
+            visible=False,
+            controls=[
+                ft.Text("Delete Task", expand=True),
+                ft.FilledButton(text='Yes', on_click=self.remove_clicked),
+                ft.FilledButton(text='No', on_click = self.exit_remove)
+            ]
+        )
+        
         self.task_view = ft.Row(
             visible=True,
             controls=[
@@ -35,7 +43,17 @@ class Task(ft.UserControl):
             ]
         )
 
-        return ft.Column(controls=[self.task_view, self.edit_view])
+        return ft.Column(controls=[self.task_view, self.edit_view, self.del_confirm])
+
+    def exit_remove(self, _):
+        self.task_view.visible = True
+        self.del_confirm.visible = False
+        self.update()
+
+    def confirm_remove(self, _):
+        self.task_view.visible = False
+        self.del_confirm.visible = True
+        self.update()
 
     def edit_clicked(self, _):
         self.edit_view.visible = True
@@ -62,53 +80,54 @@ class Task(ft.UserControl):
             self.del_task.disabled = False
         self.update()
 
-class ToDo(ft.UserControl):
-    def build(self):
-        self.input = ft.TextField(hint_text="What should be done?",
-                                  expand=True,
-                                  autofocus=True)
-        self.tasks = ft.Column()
-        
-        titleThingy = ft.Row(controls=[
-                ft.Text(value=appName,
-                        style=ft.TextThemeStyle.HEADLINE_MEDIUM),
-                ft.IconButton(icon=ft.icons.CHECK_CIRCLE_OUTLINE)],
-                alignment=ft.MainAxisAlignment.CENTER
-            )
-        view = ft.Column(
-            horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-            controls = [
-                titleThingy,
-                ft.Row(
-                    controls=[
-                        self.input,
-                        ft.FloatingActionButton(icon=ft.icons.ADD,
-                                                on_click=self.add_clicked)
-                    ]
-                ),
-                self.tasks
-            ]
-        )
-        return view
-    
-    def add_clicked(self, _):
-        if self.input.value !="":
-            task = Task(self.input.value, self.remove_task)
-            self.input.value =""
-            self.input.focus()
-            self.tasks.controls.append(task)
-            self.update()
-
-    def remove_task(self, task):
-        self.tasks.controls.remove(task)
-        self.input.focus()
-        self.update()
-
 def main(page: ft.Page):
+    def change_theme(_):
+        if page.theme_mode == ft.ThemeMode.LIGHT:
+            page.theme_mode = ft.ThemeMode.DARK
+            page.update()
+        else:
+            page.theme_mode = ft.ThemeMode.LIGHT
+            page.update()
+
+    def del_task(task):
+        tasks.controls.remove(task)
+        page.update()
+
+
+    def add_task(_):
+        if inputThingy.value == '':
+            return
+        todo = task(inputThingy.value, del_task)
+        tasks.controls.append(todo)
+        inputThingy.value = ''
+        page.update()
+    
+    page.theme_mode = ft.ThemeMode.LIGHT
     page.window_height = 640
     page.window_width = 360
-    page.title = appName
-    todo = ToDo()
-    page.add(todo)
+    page.title = "Deff Not Stolen"
+    titleThingy = ft.Row(controls=[
+                ft.Text(value="Deff Not Stolen",
+                        style=ft.TextThemeStyle.HEADLINE_MEDIUM),
+                ft.IconButton(icon=ft.icons.CHECK_CIRCLE_OUTLINE, on_click=change_theme)],
+                alignment=ft.MainAxisAlignment.CENTER
+            )
+    
+    inputThingy = ft.TextField(label='Add Task', width= 280, height=50)
+
+    taskAdderThingy = ft.Row(controls=[
+                            inputThingy,
+                            ft.FloatingActionButton(icon = ft.icons.ADD, width=50, height=50, on_click=add_task)])
+
+    tasks = ft.ListView()
+
+    view = ft.Column(controls=[
+                        titleThingy,
+                        taskAdderThingy,
+                        tasks],
+
+        )
+
+    page.add(view)
 
 ft.app(target=main)
